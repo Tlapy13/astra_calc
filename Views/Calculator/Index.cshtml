@@ -1,0 +1,141 @@
+﻿@{
+    ViewBag.Title = "Simple Calculator";
+}
+
+<h2>Simple Calculator</h2>
+
+<div class="calculator-body">
+    <div class="display">
+        <input type="text" readonly id="display" />
+    </div>
+
+    <div class="button-row">
+        <button class="btn number">1</button>
+        <button class="btn number">2</button>
+        <button class="btn number">3</button>
+        <button class="btn operator">+</button>
+    </div>
+    <div class="button-row">
+        <button class="btn number">4</button>
+        <button class="btn number">5</button>
+        <button class="btn number">6</button>
+        <button class="btn operator">-</button>
+    </div>
+    <div class="button-row">
+        <button class="btn number">7</button>
+        <button class="btn number">8</button>
+        <button class="btn number">9</button>
+        <button class="btn operator">*</button>
+    </div>
+    <div class="button-row">
+        <button class="btn number">0</button>
+        <button class="btn">.</button>
+        <button class="btn" id="clear">C</button>
+        <button class="btn operator">/</button>
+    </div>
+    <div class="button-row">
+        <button class="btn large" id="calculate">Spočítat</button>
+    </div>
+</div>
+
+<div class="history">
+    <h3>Historie:</h3>
+    <ul id="history-list">
+    </ul>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.btn.number, .btn:contains(".")').click(function () {
+                var value = $(this).text();
+                var currentDisplay = $('#display').val();
+                if (value === '.' && isDecimalInvalid(currentDisplay)) {
+                    return;
+                }
+                $('#display').val(currentDisplay + value);
+            });
+
+            $('.btn.operator').click(function () {
+                var currentDisplay = $('#display').val();
+                var value = $(this).text();
+                if ("+-*/".includes(currentDisplay.slice(-1))) {
+                    $('#display').val(currentDisplay.slice(0, -1) + value);
+                } else {
+                    $('#display').val(currentDisplay + value);
+                }
+            });
+
+            $('#clear').click(function () {
+                $('#display').val('');
+            });
+
+            $('#calculate').click(function () {
+                var expression = $('#display').val();
+                if (expression && isValidExpression(expression)) {
+                    calculateExpression(expression);
+                } else {
+                    alert('Neplatný výraz!');
+                }
+            });
+
+            loadHistory();
+        });
+
+        function isDecimalInvalid(currentDisplay) {
+            var parts = currentDisplay.split(/[\+\-\*\/]/);
+            var lastSegment = parts.pop();
+            return lastSegment.includes('.');
+        }
+
+        function isValidExpression(expression) {
+            return expression && expression.trim() !== '';
+        }
+
+        function calculateExpression(expression) {
+            console.log('expression: ', expression);
+            $.ajax({
+                url: '/Calculator/Calculate',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ expression: expression }),
+                success: function (response) {
+                    if (response.error) {
+                        console.error(response.error);
+                        alert('Chyba: ' + response.error);
+                    } else {
+                        $('#display').val(response.result);
+                        console.log('Result: ', response.result);
+                        loadHistory();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('AJAX ERROR: ' + error);
+                    console.error('AJAX Error: ', error);
+                }
+            });
+        }
+
+        function loadHistory() {
+            $.ajax({
+                url: '/Calculator/History',
+                type: 'GET',
+                success: function (history) {
+                    var historyList = $('#history-list');
+                    historyList.empty(); 
+
+                    history.forEach(function (record) {
+                        var listItem = $('<li>').text(record.expression + ' = ' + record.result);
+                        historyList.append(listItem);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    alert('AJAX Error: ' + error);
+                    console.error('AJAX Error: ', error);
+                }
+            });
+        }
+    </script>
+}
+
+
