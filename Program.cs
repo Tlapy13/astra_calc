@@ -3,6 +3,8 @@ using astra_calc.Services;
 using Serilog;
 using Database;
 using Database.Interfaces;
+using Calculator_Logic.Interfaces;
+using Calculator_Logic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,13 +21,14 @@ builder.Logging.AddSerilog(logger);
 builder.Services.AddControllersWithViews();
 
 // Add DI
-builder.Services.AddScoped<ICalculatorService, CalculatorService>();
 
 //In case of DB should be used instead of cache:
 //builder.Services.AddScoped<ICalculationDataAccess, CalculationDataAccess>(serviceProvider =>
 //    new CalculationDataAccess(builder.Configuration.GetConnectionString("CalculationDb")));
 //builder.Services.AddScoped<ICalculationHistoryService, CalculationHistoryService>();
 builder.Services.AddScoped<ICalculationHistoryService, CalculationCacheService>();
+builder.Services.AddScoped<ICalculate, Calculate>();
+builder.Services.AddScoped<ICalculatorService, CalculatorService>();
 builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
 
 builder.Services.AddMemoryCache();

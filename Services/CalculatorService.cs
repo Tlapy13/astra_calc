@@ -1,15 +1,16 @@
 ﻿using astra_calc.Services.Interfaces;
 using Calculator_Logic;
+using Calculator_Logic.Interfaces;
 
 namespace astra_calc.Services
 {
     public class CalculatorService: ICalculatorService
     {
-        private readonly Calculate _calculate;
+        private readonly ICalculate _calculate;
 
-        public CalculatorService()
+        public CalculatorService(ICalculate calculate)
         {
-            _calculate = new Calculate();
+            _calculate = calculate;
         }
 
         public string EvaluateExpression(string expression)
